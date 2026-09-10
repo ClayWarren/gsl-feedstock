@@ -1,0 +1,57 @@
+name: Native GSL with unpublished helper
+on:
+  push:
+    branches: [codex/gsl68-native-validation]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native-gsl:
+    runs-on: windows-11-arm
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check out exact prerequisite PR head
+        uses: actions/checkout@v4
+        with:
+          repository: conda-forge/autotools_clang_conda-feedstock
+          ref: c4ff10e7195c797fbf6bd3af052ec781175a3f7c
+          path: prerequisite
+      - name: Download emulated build orchestration tool
+        shell: pwsh
+        run: |
+          Invoke-WebRequest https://github.com/mamba-org/micromamba-releases/releases/download/1.5.10-0/micromamba-win-64 -OutFile "$env:RUNNER_TEMP\micromamba.exe"
+      - name: Build prerequisite and native GSL without publishing
+        shell: cmd
+        run: |
+          set "CONDA_SUBDIR=win-64"
+          "%RUNNER_TEMP%\micromamba.exe" create -y -p C:\gsl-tools -c conda-forge conda-build conda-index rattler-build
+          if errorlevel 1 exit /b 1
+          call C:\gsl-tools\condabin\conda.bat activate C:\gsl-tools
+          if errorlevel 1 exit /b 1
+          set "CONDA_SUBDIR=win-arm64"
+          set "CONDA_SOLVER=libmamba"
+          set "CONDA_CHANNEL_PRIORITY=strict"
+          rattler-build build -r prerequisite\recipe -m prerequisite\.ci_support\win_arm64_.yaml --build-platform win-arm64 --target-platform win-arm64 --output-dir C:\gsl-prerequisite
+          if errorlevel 1 exit /b 1
+          call conda index C:\gsl-prerequisite
+          if errorlevel 1 exit /b 1
+          call conda build recipe -m .ci_support\win_arm64_.yaml --croot C:\gsl-build --output-folder C:\gsl-output --override-channels -c file:///C:/gsl-prerequisite -c conda-forge
+          if errorlevel 1 exit /b 1
+      - name: Stage locally validated packages
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Path native-packages -Force | Out-Null
+          Copy-Item C:\gsl-prerequisite\win-arm64\*.conda native-packages
+          Copy-Item C:\gsl-output\win-arm64\*.conda native-packages
+          if ((Get-ChildItem native-packages -Filter *.conda).Count -ne 2) {
+            throw 'Expected the prerequisite and GSL package'
+          }
+      - name: Preserve locally validated packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-gsl-and-unpublished-helper
+          path: native-packages/*.conda
+          if-no-files-found: error
