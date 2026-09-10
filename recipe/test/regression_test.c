@@ -1,6 +1,8 @@
 #include <stdio.h>
 #include <math.h>
+#include <float.h>
 #include <gsl/gsl_blas.h>
+#include <gsl/gsl_ieee_utils.h>
 #include <gsl/gsl_linalg.h>
 #include <gsl/gsl_rng.h>
 #include <gsl/gsl_randist.h>
@@ -16,6 +18,17 @@ int main(int argv, char* argc[])
   }
   
   gsl_rng_free(r);
+
+  /* Precision control is x87-only; ARM64 must still apply rounding changes. */
+  unsigned int control_word;
+  if (gsl_ieee_set_mode(GSL_IEEE_DOUBLE_PRECISION, GSL_IEEE_ROUND_DOWN,
+                       GSL_IEEE_MASK_ALL) != 0) return 8;
+  if (_controlfp_s(&control_word, 0, 0) != 0 ||
+      (control_word & _MCW_RC) != _RC_DOWN) return 9;
+  if (gsl_ieee_set_mode(GSL_IEEE_DOUBLE_PRECISION, GSL_IEEE_ROUND_TO_NEAREST,
+                       GSL_IEEE_MASK_ALL) != 0) return 10;
+  if (_controlfp_s(&control_word, 0, 0) != 0 ||
+      (control_word & _MCW_RC) != _RC_NEAR) return 11;
 
   /* Exercise the installed GSL DLL and its external CBLAS dependency. */
   double matrix[] = {4.0, 1.0, 1.0, 3.0};
@@ -39,7 +52,7 @@ int main(int argv, char* argc[])
                     0.0, &y.vector) != 0) return 6;
   if (fabs(product[0] - rhs[0]) > 1e-12 ||
       fabs(product[1] - rhs[1]) > 1e-12) return 7;
-  puts("GSL installed-package RNG, LU solve, and BLAS residual checks passed");
+  puts("GSL installed-package RNG, IEEE rounding, LU solve, and BLAS residual checks passed");
 
   return 0;
 }
