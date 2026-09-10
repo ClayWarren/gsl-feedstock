@@ -28,7 +28,7 @@ else
                 --host=${HOST} || (cat config.log && exit 1)
 fi
 
-[[ "$target_platform" == "win-64" ]] && patch_libtool
+[[ "$target_platform" == win-* ]] && patch_libtool
 
 
 # Don't link with the convenience libraries as they don't contain __imp_*
