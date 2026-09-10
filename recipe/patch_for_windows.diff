@@ -43,7 +43,7 @@ index 0000000..e024eae
 +    case GSL_IEEE_DOUBLE_PRECISION:
 +    default:							mode |= _PC_53;
 +	}
-+#ifndef _M_AMD64
++#if defined(_M_IX86)
 +	mask |= _MCW_PC;
 +#endif
 +
