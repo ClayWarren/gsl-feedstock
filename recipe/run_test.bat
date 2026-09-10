@@ -18,3 +18,6 @@ if errorlevel 1 exit 1
 :: Run test
 .\regression_test.exe
 if errorlevel 1 exit 1
+
+powershell -NoProfile -ExecutionPolicy Bypass -File check_pe.ps1
+if errorlevel 1 exit 1
