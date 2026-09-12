@@ -110,11 +110,11 @@ index 97e0a11..73b28ef 100644
  
  #include <config.h>
  #include <stdlib.h>
--#include <stdio.h>
+ #include <stdio.h>
+-#include <unistd.h>
 +#if HAVE_UNISTD_H
 +#  include <unistd.h>
 +#endif
- #include <unistd.h>
  #include <math.h>
  #include <gsl/gsl_math.h>
 diff --git a/vector/test.c b/vector/test.c

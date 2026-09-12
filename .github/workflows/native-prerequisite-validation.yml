@@ -1,7 +1,7 @@
 name: Native GSL with unpublished helper
 on:
   push:
-    branches: [codex/gsl68-native-validation]
+    branches: [codex/gsl68-test-repair]
   workflow_dispatch:
 
 permissions:
@@ -17,7 +17,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: conda-forge/autotools_clang_conda-feedstock
-          ref: c4ff10e7195c797fbf6bd3af052ec781175a3f7c
+          ref: d9f673592ff170827164d52b5d84d6f591533be9
           path: prerequisite
       - name: Download emulated build orchestration tool
         shell: pwsh

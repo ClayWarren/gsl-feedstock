@@ -42,9 +42,14 @@ if [[ "$target_platform" == win* ]]; then
     # There are some numerical issues with the tests as well as build issues.
     # So disable for now. CMake build didn't run tests either.
 if [[ "${CONDA_BUILD_CROSS_COMPILATION:-}" != "1" || "${CROSSCOMPILING_EMULATOR:-}" != "" ]]; then
-    make check -j${CPU_COUNT} -k || true
+    if ! make check -j${CPU_COUNT} -k; then
+        find . -name test-suite.log -exec cat {} \;
+        sh -x ./pkgconfig.test || true
+        pkg-config --define-variable=GSL_CBLAS_LIB=-lfoo --libs gsl || true
+        exit 1
+    fi
 fi
-    echo "no check on windows"
+    echo "Windows checks completed"
     echo "pkg-config before"
     cat $PREFIX/lib/pkgconfig/gsl.pc
     PREFIX_WIN=$(cygpath -w $PREFIX)

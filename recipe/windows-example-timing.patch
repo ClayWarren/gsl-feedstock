@@ -1,0 +1,24 @@
+--- a/doc/examples/nlfit4.c
++++ b/doc/examples/nlfit4.c
+@@ -1,6 +1,21 @@
+ #include <stdlib.h>
+ #include <stdio.h>
++#if defined(_WIN32)
++#include <time.h>
++struct timeval { time_t tv_sec; long tv_usec; };
++static int gettimeofday(struct timeval *tv, void *unused)
++{
++  struct timespec ts;
++  (void) unused;
++  if (timespec_get(&ts, TIME_UTC) != TIME_UTC)
++    return -1;
++  tv->tv_sec = ts.tv_sec;
++  tv->tv_usec = (long) (ts.tv_nsec / 1000);
++  return 0;
++}
++#else
+ #include <sys/time.h>
++#endif
+ #include <gsl/gsl_vector.h>
+ #include <gsl/gsl_matrix.h>
+ #include <gsl/gsl_blas.h>

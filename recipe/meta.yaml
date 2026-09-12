@@ -10,6 +10,7 @@ source:
   patches:
     # Taken from https://github.com/ampl/gsl/tree/v2.4.0
     - patch_for_windows.diff  # [win]
+    - windows-example-timing.patch  # [win]
 
 build:
   number: 3
