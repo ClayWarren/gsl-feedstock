@@ -11,7 +11,7 @@ source:
     # Taken from https://github.com/ampl/gsl/tree/v2.4.0
     - patch_for_windows.diff  # [win]
     - windows-example-timing.patch  # [win]
-    - qr-jacobi-reference.patch  # [win]
+    - qr-modified-reference.patch  # [win]
     - qr-input-diagnostics.patch  # [win]
 
 build:
