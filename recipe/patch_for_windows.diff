@@ -106,15 +106,18 @@ diff --git a/spmatrix/test.c b/spmatrix/test.c
 index 97e0a11..73b28ef 100644
 --- a/spmatrix/test.c
 +++ b/spmatrix/test.c
-@@ -19,7 +19,9 @@
+@@ -19,7 +19,12 @@
  
  #include <config.h>
  #include <stdlib.h>
--#include <stdio.h>
+ #include <stdio.h>
+-#include <unistd.h>
 +#if HAVE_UNISTD_H
 +#  include <unistd.h>
++#elif defined(_WIN32)
++#  include <io.h>
++#  define unlink _unlink
 +#endif
- #include <unistd.h>
  #include <math.h>
  #include <gsl/gsl_math.h>
 diff --git a/vector/test.c b/vector/test.c
