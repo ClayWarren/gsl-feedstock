@@ -1,0 +1,36 @@
+--- a/linalg/test_qr.c
++++ b/linalg/test_qr.c
+@@ -694,6 +694,33 @@
+       double xi = gsl_vector_get(x, i);
+       double yi = gsl_vector_get(x_svd, i);
+ 
++      /* Private diagnostic: preserve exact inputs for an independent solve. */
++      if (yi != 0.0 && fabs(xi - yi) / fabs(yi) > eps)
++        {
++          FILE * fp = fopen("qr-ur-failure.json", "w");
++          size_t row, col;
++          if (!fp) abort();
++          fprintf(fp, "{\"eps\":%.17g,\"component\":%zu,\"A\":[", eps, i);
++          for (row = 0; row < M + N; ++row)
++            {
++              fprintf(fp, "%s[", row ? "," : "");
++              for (col = 0; col < N; ++col)
++                fprintf(fp, "%s%.17g", col ? "," : "", gsl_matrix_get(B, row, col));
++              fprintf(fp, "]");
++            }
++          fprintf(fp, "],\"b\":[");
++          for (row = 0; row < M + N; ++row)
++            fprintf(fp, "%s%.17g", row ? "," : "", gsl_vector_get(b, row));
++          fprintf(fp, "],\"qr\":[");
++          for (col = 0; col < N; ++col)
++            fprintf(fp, "%s%.17g", col ? "," : "", gsl_vector_get(x, col));
++          fprintf(fp, "],\"svd\":[");
++          for (col = 0; col < N; ++col)
++            fprintf(fp, "%s%.17g", col ? "," : "", gsl_vector_get(x_svd, col));
++          fprintf(fp, "]}\n");
++          if (fclose(fp)) abort();
++        }
++
+       gsl_test_rel(xi, yi, eps, "%s (%3lu,%3lu)[%lu]: %22.18g   %22.18g\n",
+                    desc, M, N, i, xi, yi);
+     }

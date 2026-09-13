@@ -49,4 +49,5 @@ jobs:
           path: |
             C:\bld\gsl_*\work\linalg\test-suite.log
             C:\bld\gsl_*\work\linalg\test.log
+            C:\bld\gsl_*\work\linalg\qr-ur-failure.json
           if-no-files-found: warn
