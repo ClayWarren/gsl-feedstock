@@ -55,3 +55,13 @@ jobs:
           name: native-gsl-and-unpublished-helper
           path: native-packages/*.conda
           if-no-files-found: error
+      - name: Preserve full test diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gsl-full-test-diagnostics
+          path: |
+            C:\gsl-build\gsl_*\work\**\test-suite.log
+            C:\gsl-build\gsl_*\work\pkgconfig.log
+            C:\gsl-build\gsl_*\work\gsl.pc
+          if-no-files-found: warn
