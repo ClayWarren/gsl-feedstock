@@ -1,0 +1,24 @@
+Use the tall-matrix SVD as the reference for structured QR least squares.
+
+The existing Windows x64 GSL 2.8 package fails a component comparison
+against the original SVD despite QR satisfying the same tolerance against
+an independently computed high-precision solution. The modified SVD meets
+the unchanged tolerance on that fixture. This patch changes the reference
+algorithm only; it does not relax tolerances or skip numerical tests.
+
+--- a/linalg/test_qr.c
++++ b/linalg/test_qr.c
+@@ -685,7 +685,12 @@
+   gsl_matrix_memcpy(&tmp.matrix, A);
+ 
+   gsl_matrix_memcpy(U_svd, B);
+-  gsl_linalg_SV_decomp(U_svd, V_svd, S_svd, work);
++  /* Use the tall-matrix SVD reference for this overdetermined system. */
++  {
++    gsl_matrix * X_svd = gsl_matrix_alloc(N, N);
++    s += gsl_linalg_SV_decomp_mod(U_svd, X_svd, V_svd, S_svd, work);
++    gsl_matrix_free(X_svd);
++  }
+   gsl_linalg_SV_solve(U_svd, V_svd, S_svd, b, x_svd);
+ 
+   /* compare QR with SVD solution */
