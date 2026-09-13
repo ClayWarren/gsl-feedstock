@@ -41,13 +41,13 @@ jobs:
           path: C:\bld\win-64\gsl-*.conda
           if-no-files-found: warn
           retention-days: 90
-      - name: Preserve failed numerical test diagnostics
-        if: failure()
+      - name: Preserve numerical test diagnostics
+        if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: gsl-x64-linalg-diagnostics
           path: |
             C:\bld\gsl_*\work\linalg\test-suite.log
             C:\bld\gsl_*\work\linalg\test.log
-            C:\bld\gsl_*\work\linalg\qr-ur-failure.json
+            C:\bld\**\qr-ur-failure.json
           if-no-files-found: warn
