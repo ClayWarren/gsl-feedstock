@@ -1,7 +1,7 @@
-name: Native GSL with unpublished helper
+name: Native ARM64 GSL modified SVD reference
 on:
   push:
-    branches: [codex/gsl68-test-repair]
+    branches: [codex/gsl-modified-arm64-probe]
   workflow_dispatch:
 
 permissions:
@@ -12,9 +12,9 @@ jobs:
     runs-on: windows-11-arm
     timeout-minutes: 90
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - name: Check out exact prerequisite PR head
-        uses: actions/checkout@v4
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           repository: conda-forge/autotools_clang_conda-feedstock
           ref: d9f673592ff170827164d52b5d84d6f591533be9
@@ -50,14 +50,14 @@ jobs:
             throw 'Expected the prerequisite and GSL package'
           }
       - name: Preserve locally validated packages
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: native-gsl-and-unpublished-helper
           path: native-packages/*.conda
           if-no-files-found: error
       - name: Preserve full test diagnostics
         if: failure()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: gsl-full-test-diagnostics
           path: |
