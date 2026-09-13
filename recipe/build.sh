@@ -46,7 +46,11 @@ if [[ "$target_platform" == win* ]]; then
         command -v pkg-config
         pkg-config --version
         sh -x ./pkgconfig.test
-        make check -j${CPU_COUNT} -k
+        if ! make check -j${CPU_COUNT} -k; then
+            cat linalg/test-suite.log || true
+            cat linalg/test.log || true
+            exit 1
+        fi
     fi
     echo "Windows checks completed"
     echo "pkg-config before"

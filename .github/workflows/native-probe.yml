@@ -1,0 +1,52 @@
+name: gsl native Windows ARM64
+on:
+  push:
+    branches: [codex/gsl-x64-test-probe]
+permissions:
+  contents: read
+jobs:
+  probe:
+    if: github.repository == 'ClayWarren/gsl-feedstock'
+    runs-on: windows-2022
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        config: [win_64_]
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - name: Build and test gsl
+        shell: cmd
+        env:
+          BUILD_PLATFORM: win-64
+          CI: github_actions
+          CONDA_BLD_PATH: C:\bld
+          CONFIG: ${{ matrix.config }}
+          MINIFORGE_HOME: C:\Miniforge
+          PYTHONUNBUFFERED: '1'
+          UPLOAD_PACKAGES: 'False'
+          EXTRA_CB_OPTIONS: '--python 3.14 --override-channels -c conda-forge'
+          RATTLER_BUILD_COLOR: always
+          RATTLER_BUILD_ENABLE_GITHUB_INTEGRATION: 'true'
+        run: |
+          set "flow_run_id=github_%GITHUB_RUN_ID%"
+          set "remote_url=https://github.com/%GITHUB_REPOSITORY%"
+          set "sha=%GITHUB_SHA%"
+          call ".scripts\run_win_build.bat"
+      - name: Preserve gsl package
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: gsl-arm64-package
+          path: C:\bld\win-64\gsl-*.conda
+          if-no-files-found: warn
+          retention-days: 90
+      - name: Preserve failed numerical test diagnostics
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: gsl-x64-linalg-diagnostics
+          path: |
+            C:\bld\gsl_*\work\linalg\test-suite.log
+            C:\bld\gsl_*\work\linalg\test.log
+          if-no-files-found: warn
