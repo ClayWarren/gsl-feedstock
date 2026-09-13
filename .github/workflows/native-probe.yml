@@ -1,53 +1,33 @@
-name: GSL x64 numerical diagnostics
+name: GSL standalone QR comparison
 on:
   push:
-    branches: [codex/gsl-x64-test-probe]
+    branches: [codex/gsl-qr-reproducer]
 permissions:
   contents: read
 jobs:
-  probe:
-    if: github.repository == 'ClayWarren/gsl-feedstock'
+  reproduce:
     runs-on: windows-2022
-    timeout-minutes: 90
-    strategy:
-      fail-fast: false
-      matrix:
-        config: [win_64_]
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
-      - name: Build and test gsl
-        shell: cmd
-        env:
-          BUILD_PLATFORM: win-64
-          CI: github_actions
-          CONDA_BLD_PATH: C:\bld
-          CONFIG: ${{ matrix.config }}
-          MINIFORGE_HOME: C:\Miniforge
-          PYTHONUNBUFFERED: '1'
-          UPLOAD_PACKAGES: 'False'
-          EXTRA_CB_OPTIONS: '--python 3.14 --override-channels -c conda-forge'
-          RATTLER_BUILD_COLOR: always
-          RATTLER_BUILD_ENABLE_GITHUB_INTEGRATION: 'true'
+      - name: Install published x64 GSL and netlib
+        shell: pwsh
         run: |
-          set "flow_run_id=github_%GITHUB_RUN_ID%"
-          set "remote_url=https://github.com/%GITHUB_REPOSITORY%"
-          set "sha=%GITHUB_SHA%"
-          call ".scripts\run_win_build.bat"
-      - name: Preserve gsl package
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: gsl-x64-package
-          path: C:\bld\win-64\gsl-*.conda
-          if-no-files-found: warn
-          retention-days: 90
-      - name: Preserve numerical test diagnostics
-        if: always()
-        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
-        with:
-          name: gsl-x64-linalg-diagnostics
-          path: |
-            C:\bld\gsl_*\work\linalg\test-suite.log
-            C:\bld\gsl_*\work\linalg\test.log
-            C:\bld\**\qr-ur-failure.json
-          if-no-files-found: warn
+          $ErrorActionPreference = 'Stop'
+          Invoke-WebRequest 'https://github.com/mamba-org/micromamba-releases/releases/download/1.5.10-0/micromamba-win-64' -OutFile C:\micromamba.exe
+          & C:\micromamba.exe create -y -r C:\mamba -p C:\consumer --platform win-64 --override-channels --strict-channel-priority -c conda-forge gsl=2.8 'libblas=3.9.0=16*_netlib' 'libcblas=3.9.0=16*_netlib'
+          if ($LASTEXITCODE) { exit $LASTEXITCODE }
+          Get-Content C:\consumer\conda-meta\gsl-*.json
+      - name: Compile and run exact captured system
+        shell: cmd
+        run: |
+          for /f "usebackq tokens=*" %%i in (`"%ProgramFiles(x86)%\Microsoft Visual Studio\Installer\vswhere.exe" -latest -products * -property installationPath`) do set "VS_PATH=%%i"
+          call "%VS_PATH%\VC\Auxiliary\Build\vcvarsall.bat" x64
+          if errorlevel 1 exit /b 1
+          set "PATH=C:\consumer\Library\bin;%PATH%"
+          cl /nologo /std:c11 /MD /O2 /DGSL_DLL /DWIN32 /IC:\consumer\Library\include .github\qr-reproducer\reproduce.c /link /LIBPATH:C:\consumer\Library\lib gsl.lib cblas.lib /OUT:reproduce.exe
+          if errorlevel 1 exit /b 1
+          dumpbin /headers reproduce.exe | findstr /I /C:"8664 machine (x64)"
+          if errorlevel 1 exit /b 1
+          reproduce.exe
+          exit /b %ERRORLEVEL%
