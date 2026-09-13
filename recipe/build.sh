@@ -19,6 +19,12 @@ if [[ "$target_platform" == win* ]]; then
     cp $RECIPE_DIR/getopt.h .
     sed -i.bak "s/INLINE_FUN inline/INLINE_FUN static inline/g" gsl_inline.h
     sed -i.bak "s/INLINE_DECL inline/INLINE_DECL static inline/g" gsl_inline.h
+    # Private diagnostic: the generic Autoconf check redeclares vprintf
+    # without stdio.h and fails to link with the Windows CRT. Verify the
+    # real header-declared call before enabling test descriptions.
+    ${CC} ${CPPFLAGS} ${CFLAGS} "$RECIPE_DIR/probe-vprintf.c" ${LDFLAGS} -o probe-vprintf.exe
+    ./probe-vprintf.exe
+    export ac_cv_func_vprintf=yes
     ./configure --prefix=${PREFIX} \
                 --disable-static || (cat config.log && exit 1)
     cat config.log

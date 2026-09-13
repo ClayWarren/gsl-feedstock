@@ -1,4 +1,4 @@
-name: gsl native Windows ARM64
+name: GSL x64 numerical diagnostics
 on:
   push:
     branches: [codex/gsl-x64-test-probe]
@@ -37,7 +37,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: gsl-arm64-package
+          name: gsl-x64-package
           path: C:\bld\win-64\gsl-*.conda
           if-no-files-found: warn
           retention-days: 90
