@@ -25,6 +25,7 @@ requirements:
     - {{ compiler("c") }}
     - {{ stdlib("c") }}
     - autotools_clang_conda     # [win]
+    - pkg-config                # [win]
     - autoconf                  # [unix]
     - automake                  # [unix]
     - libtool                   # [unix]

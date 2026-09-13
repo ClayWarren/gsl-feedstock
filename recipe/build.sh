@@ -39,20 +39,15 @@ if [[ "$target_platform" == win* ]]; then
     done
     make -j${CPU_COUNT}
     make install
-    # There are some numerical issues with the tests as well as build issues.
-    # So disable for now. CMake build didn't run tests either.
-if [[ "${CONDA_BUILD_CROSS_COMPILATION:-}" != "1" || "${CROSSCOMPILING_EMULATOR:-}" != "" ]]; then
-    command -v pkg-config
-    cat gsl.pc
-    sh -x ./pkgconfig.test || true
-    PKG_CONFIG_PATH=. pkg-config --define-variable=GSL_CBLAS_LIB=-lfoo --libs gsl || true
-    if ! make check -j${CPU_COUNT} -k; then
-        find . -name test-suite.log -exec cat {} \; || true
-        sh -x ./pkgconfig.test || true
-        pkg-config --define-variable=GSL_CBLAS_LIB=-lfoo --libs gsl || true
-        exit 1
+    if [[ "${CONDA_BUILD_CROSS_COMPILATION:-}" != "1" || "${CROSSCOMPILING_EMULATOR:-}" != "" ]]; then
+        # Verify the declared build tool before running the full native suite.
+        export PATH="$(cygpath -u "$BUILD_PREFIX")/Library/bin:$PATH"
+        hash -r
+        command -v pkg-config
+        pkg-config --version
+        sh -x ./pkgconfig.test
+        make check -j${CPU_COUNT} -k
     fi
-fi
     echo "Windows checks completed"
     echo "pkg-config before"
     cat $PREFIX/lib/pkgconfig/gsl.pc
