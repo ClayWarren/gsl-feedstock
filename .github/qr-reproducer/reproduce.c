@@ -25,14 +25,15 @@ int main(void) {
     printf("GSL %s; high-precision reference rounded to double: %.17g\n",gsl_version,reference);
     printf("QR %.17g; relative reference error %.17g\n",x,fabs((x-reference)/reference));
     int original_failed=0;
-    for (int jacobi=0;jacobi<2;++jacobi) {
+    for (int jacobi=0;jacobi<3;++jacobi) {
         gsl_matrix_memcpy(u,&bmat.matrix);
-        if(jacobi) { CHECK(gsl_linalg_SV_decomp_jacobi(u,v,s)); }
+        if(jacobi==2) { gsl_matrix *aux=gsl_matrix_alloc(n,n); CHECK(gsl_linalg_SV_decomp_mod(u,aux,v,s,work)); gsl_matrix_free(aux); }
+        else if(jacobi==1) { CHECK(gsl_linalg_SV_decomp_jacobi(u,v,s)); }
         else { CHECK(gsl_linalg_SV_decomp(u,v,s,work)); }
         CHECK(gsl_linalg_SV_solve(u,v,s,&rhs.vector,svd));
         double z=gsl_vector_get(svd,k), difference=fabs((x-z)/z);
         printf("%s SVD %.17g; relative reference error %.17g; QR comparison %.17g > %.17g: %s\n",
-               jacobi?"Jacobi":"Original",z,fabs((z-reference)/reference),difference,tolerance,
+               jacobi==2?"Modified":jacobi==1?"Jacobi":"Original",z,fabs((z-reference)/reference),difference,tolerance,
                difference>tolerance?"FAIL":"PASS");
         if(!jacobi) original_failed=difference>tolerance;
     }
